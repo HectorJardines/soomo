@@ -23,7 +23,8 @@ TARGET = soomo
 DEBUG = 1
 # optimization
 OPT = -Og
-
+#cppcheck
+CPPCHECK = cppcheck
 
 #######################################
 # paths
@@ -34,6 +35,10 @@ BUILD_DIR = build
 ######################################
 # source
 ######################################
+#cppcheck sources
+CCHECK_SOURCES = \
+Core/Src/main.c
+
 # C sources
 C_SOURCES =  \
 Core/Src/main.c \
@@ -113,6 +118,10 @@ C_DEFS =  \
 # AS includes
 AS_INCLUDES = 
 
+#cppcheck includes
+CCHECK_INCLUDES = \
+Core/Inc
+
 # C includes
 C_INCLUDES =  \
 -ICore/Inc \
@@ -190,6 +199,17 @@ $(BUILD_DIR):
 clean:
 	-rm -fR $(BUILD_DIR)
   
+#######################################
+# cppcheck
+#######################################
+.PHONY: all clean cppcheck
+
+cppcheck:
+	@$(CPPCHECK) --quiet --enable=all --error-exitcode=1 \
+	--inline-suppr \
+	-I$(CCHECK_INCLUDES) \
+	$(CCHECK_SOURCES)
+
 #######################################
 # dependencies
 #######################################
