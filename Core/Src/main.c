@@ -62,6 +62,10 @@ void SystemClock_Config(void);
  * @brief  The application entry point.
  * @retval int
  */
+int main(void)
+{
+	return 0;
+}
 
 /**
  * @brief System Clock Configuration
