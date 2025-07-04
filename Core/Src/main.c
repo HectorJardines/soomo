@@ -64,6 +64,18 @@ void SystemClock_Config(void);
  */
 int main(void)
 {
+	SystemClock_Config();
+
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+	GPIOA->MODER |= GPIO_MODER_MODER5_0;
+	volatile uint32_t i = 0;
+
+	while(1)
+	{
+		GPIOA->ODR ^= GPIO_ODR_OD5;
+		for (; i < 50000; ++i);
+		i = 0;
+	}
 	return 0;
 }
 
