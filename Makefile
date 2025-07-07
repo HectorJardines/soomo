@@ -42,6 +42,7 @@ Core/Src/main.c
 # C sources
 C_SOURCES =  \
 Core/Src/main.c \
+Core/Src/io.c \
 Core/Src/gpio.c \
 Core/Src/usart.c \
 Core/Src/stm32f4xx_it.c \

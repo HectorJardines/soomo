@@ -20,6 +20,7 @@
 #include "main.h"
 #include "usart.h"
 #include "gpio.h"
+#include "io.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -65,20 +66,34 @@ void SystemClock_Config(void);
 int main(void)
 {
 	SystemClock_Config();
-
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
-	GPIOA->MODER |= GPIO_MODER_MODER5_0;
+	
+	io_config_t led_config =
+	{
+		.PIN_NO = IO_PIN_5,
+		.PIN_MODE = IO_MODE_OUTPUT,
+		.PIN_SPEED = IO_SPEED_FAST,
+		.PIN_OPTYPE = IO_OPTYPE_PP,
+		.PIN_RESISTANCE = IO_RES_NOPUPD
+	};
+
+	io_handle_t led_handle =
+	{
+		.GPIOx = GPIOA,
+		.IO_Confg = led_config
+	};
+
+	IO_Config(&led_handle);
 	volatile uint32_t i = 0;
 
 	while(1)
 	{
-		GPIOA->ODR ^= GPIO_ODR_OD5;
+		IO_TogglePin(&led_handle);
 		for (; i < 50000; ++i);
 		i = 0;
 	}
 	return 0;
 }
-
 /**
  * @brief System Clock Configuration
  * @retval None
