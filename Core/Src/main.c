@@ -59,14 +59,24 @@ void SystemClock_Config(void);
 
 /* USER CODE END 0 */
 
+volatile uint8_t flag;
+
 /**
  * @brief  The application entry point.
  * @retval int
  */
+
+void led_blink(void)
+{
+	for (volatile int i = 0; i < 350000; ++i);
+	GPIOA->ODR ^= (0x1U << GPIO_ODR_OD5_Pos);
+}
+
 int main(void)
 {
 	SystemClock_Config();
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
 	
 	io_config_t led_config =
 	{
@@ -83,17 +93,65 @@ int main(void)
 		.IO_Confg = led_config
 	};
 
+	io_config_t btn_config = {
+		.PIN_MODE = IO_MODE_INPUT,
+		.PIN_NO = IO_PIN_13,
+		.PIN_OPTYPE = IO_OPTYPE_PP,
+		.PIN_RESISTANCE = IO_RES_NOPUPD,
+		.PIN_SPEED = IO_SPEED_FAST
+	};
+
+	io_handle_t btn_handle = {
+		.GPIOx = GPIOC,
+		.IO_Confg = btn_config
+	};
+
+	IO_Config(&btn_handle);
 	IO_Config(&led_handle);
-	volatile uint32_t i = 0;
+
+	IO_InitIT(&btn_handle, IO_INTERRUPT_RT, led_blink);
+	IO_SetInterruptPriority(EXTI15_10_IRQ_NO, 1);
+	IO_IRQEnableInterrupt(EXTI15_10_IRQ_NO);
 
 	while(1)
 	{
-		IO_TogglePin(&led_handle);
-		for (; i < 50000; ++i);
-		i = 0;
 	}
 	return 0;
 }
+
+
+// static inline uint8_t retrieve_syscfg_exti_port(exti_line_e EXTIx)
+// {
+// 	uint8_t EXTICRx = EXTIx / 4;
+// 	uint8_t EXTI_Msk = 0x0F;
+
+// 	uint8_t current_port = (SYSCFG->EXTICR[EXTICRx] & ( EXTI_Msk << (EXTIx * 4) ));
+// 	return current_port;
+// }
+
+// static inline uint8_t get_exti_line(void)
+// {
+// 	for (uint8_t pin_trigger = EXTI_PR_PR5_Pos; pin_trigger < EXTI_PR_PR16_Pos; ++pin_trigger)
+// 	{
+// 		uint8_t check_pr_set = (EXTI->PR & (0x1 << pin_trigger));
+// 		if (check_pr_set == PRx_SET)
+// 		{
+// 			return check_pr_set;
+// 		} 
+// 	}
+// 	return NO_PRx_SET;
+// }
+
+// // void EXTI15_10_IRQHandler(void)
+// // {
+// // 	// 1. Get the pin that triggered Interrupt
+// // 	exti_line_e exti_line_trigger = get_exti_line();
+// // 	uint8_t exti_port = retrieve_syscfg_exti_port(exti_line_trigger);
+// // 	// 2. Execute ISR from isr_functions array
+// // 	// isr_functions[exti_port][exti_line_trigger]();
+// // 	// 3. Clear Pending Reg bit
+// // 	EXTI->PR |= (0x1U << exti_line_trigger);
+// // }
 /**
  * @brief System Clock Configuration
  * @retval None

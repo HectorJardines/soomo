@@ -28,6 +28,35 @@
 #define IO_PIN_14       14U
 #define IO_PIN_15       15U
 
+#define NO_OF_PINS_IN_CR  4U
+#define CR_OFFSET_FACTOR  4U
+
+#define DISABLE_IMR_MASK  1U
+
+#define IO_PORT_CNT           4U
+#define IO_PIN_CNT_PER_PORT   16U
+
+#define PRx_SET     1U
+#define NO_PRx_SET  23U
+
+/*******************************************
+ * 				       NVIC MACROS
+ *******************************************/
+#define NVIC_ISER0      ((volatile uint32_t*)0xE000E100)
+#define NVIC_ISER1      ((volatile uint32_t*)0xE000E104)
+#define NVIC_ISER2      ((volatile uint32_t*)0xE000E108)
+#define NVIC_ISER3      ((volatile uint32_t*)0xE000E10C)
+
+#define NVIC_ICER0      ((volatile uint32_t*)0xE000E180)
+#define NVIC_ICER1      ((volatile uint32_t*)0xE000E184)
+#define NVIC_ICER2      ((volatile uint32_t*)0xE000E188)
+#define NVIC_ICER3      ((volatile uint32_t*)0xE000E18C)
+
+#define NVIC_PR_BASE_ADDR		((volatile uint32_t*)0xE000E400)
+
+#define TOTAL_NVIC_PR_BITS            8U
+#define NO_PR_BITS_EN                 4U
+#define NVIC_IPRn_OFFSET_MULTIPLIER   8U
 
 /**************************************
  *            IO ENUMS
@@ -96,24 +125,24 @@ typedef enum
 
 typedef enum
 {
-  IO_MODE_INPUT,
-  IO_MODE_OUTPUT,
-  IO_MODE_ALT_FUN,
-  IO_MODE_ANALOG
+	IO_MODE_INPUT,
+	IO_MODE_OUTPUT,
+	IO_MODE_ALT_FUN,
+	IO_MODE_ANALOG
 }io_mode_e;
 
 typedef enum
 {
-  IO_SPEED_LOW,
-  IO_SPEED_MEDIUM,
-  IO_SPEED_FAST,
-  IO_SPEED_HIGH
+	IO_SPEED_LOW,
+	IO_SPEED_MEDIUM,
+	IO_SPEED_FAST,
+	IO_SPEED_HIGH
 } io_speed_e;
 
 typedef enum
 {
-  IO_OPTYPE_PP,
-  IO_OPTYPE_OD,
+	IO_OPTYPE_PP,
+	IO_OPTYPE_OD,
 } io_optype_e;
 
 typedef enum
@@ -123,21 +152,63 @@ typedef enum
     IO_RES_PD
 } io_resistance_e;
 
+typedef enum
+{
+	IO_INTERRPT_RTFT,
+	IO_INTERRUPT_RT,
+	IO_INTERRUPT_FT
+} isr_trigger_e;
+
+typedef enum
+{
+	SYSCFG_IO_PORTA,
+	SYSCFG_IO_PORTB,
+	SYSCFG_IO_PORTC,
+	SYSCFG_IO_PORTD
+} syscfg_io_port_e;
+
+typedef enum
+{
+	IO_PORTA,
+	IO_PORTB,
+	IO_PORTC,
+	IO_PORTD
+} io_port_e;
+
 /* IO CONFIG STRUCT */
 typedef struct
 {
-  uint8_t PIN_NO;
-  io_mode_e PIN_MODE;                 /*<! PIN MODE OPTIONS FROM @io_mode_e >*/
-  io_speed_e PIN_SPEED;               /*<! PIN SPEED OPTIONS FROM @io_speed_e >*/
-  io_optype_e PIN_OPTYPE;             /*<! PIN OUTPUT TYPE OPTIONS FROM @io_optype_e >*/
-  io_resistance_e PIN_RESISTANCE;     /*<! PIN RESISTOR OPTIONS FROM @io_resistance_e >*/
+	uint8_t PIN_NO;
+	io_mode_e PIN_MODE;                 /*<! PIN MODE OPTIONS FROM @io_mode_e >*/
+	io_speed_e PIN_SPEED;               /*<! PIN SPEED OPTIONS FROM @io_speed_e >*/
+	io_optype_e PIN_OPTYPE;             /*<! PIN OUTPUT TYPE OPTIONS FROM @io_optype_e >*/
+	io_resistance_e PIN_RESISTANCE;     /*<! PIN RESISTOR OPTIONS FROM @io_resistance_e >*/
 }io_config_t;
 
 typedef struct
 {
-  GPIO_TypeDef *GPIOx;
-  io_config_t  IO_Confg;
+	GPIO_TypeDef *GPIOx;
+	io_config_t  IO_Confg;
 } io_handle_t;
+
+typedef enum
+{
+	EXTI0, EXTI1, EXTI2, EXTI3,
+	EXTI4, EXTI5, EXTI6, EXTI7,
+	EXTI8, EXTI9, EXTI10, EXTI11,
+	EXTI12, EXTI13, EXTI14, EXTI15
+}exti_line_e;
+
+typedef enum
+{
+	EXTI0_IRQ_NO = 6,
+	EXTI1_IRQ_NO,
+	EXTI2_IRQ_NO,
+	EXTI3_IRQ_NO,
+	EXTI4_IRQ_NO,
+	EXTI9_5_IRQ_NO = 23,
+	EXTI15_10_IRQ_NO = 40
+}exti_irqn_e;
 
 
 /********************************************
@@ -158,4 +229,17 @@ void IO_SetPin(io_handle_t *io_handle);
 void IO_ClearPin(io_handle_t *io_handle);
 void IO_TogglePin(io_handle_t *io_handle);
 
+/* IO Interrupt APIs */
+typedef void (*isr_function)(void);
+
+void IO_InitIT(io_handle_t *io_handle, isr_trigger_e trigger, isr_function isr);
+void IO_DeInitIT(uint8_t io);
+
+void IO_IRQEnableInterrupt(uint16_t EXTI_IRQn);
+void IO_IRQDisableIT(uint16_t EXTI_IRQn);
+void IO_SetInterruptPriority(uint16_t EXTI_IRQn, uint8_t IRQ_PR);
+
+/******************************************
+*           IO ISR Functions
+*******************************************/
 #endif
