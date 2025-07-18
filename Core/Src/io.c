@@ -39,14 +39,6 @@ void IO_Init()
 	return;
 }
 
-void IO_Config(io_handle_t *io_handle)
-{
-    IO_SetMode(io_handle->GPIOx, io_handle->IO_Confg.PIN_MODE, io_handle->IO_Confg.PIN_NO);
-	IO_SetOPType(io_handle->GPIOx, io_handle->IO_Confg.PIN_OPTYPE, io_handle->IO_Confg.PIN_NO);
-    IO_SetResistance(io_handle->GPIOx, io_handle->IO_Confg.PIN_RESISTANCE, io_handle->IO_Confg.PIN_NO);
-	IO_SetSpeed(io_handle->GPIOx, io_handle->IO_Confg.PIN_SPEED, io_handle->IO_Confg.PIN_NO);
-}
-
 /* Set Pin confgs APIs */
 void IO_SetResistance(GPIO_TypeDef *gpiox, const io_resistance_e res, const uint8_t io)
 {
@@ -119,6 +111,22 @@ void IO_SetOPType(GPIO_TypeDef *gpiox, const io_optype_e optype, const uint8_t i
 			gpiox->OTYPER |= (0x1U << io);
 			break;
 	}
+}
+static void IO_SetAltFunMode(GPIO_TypeDef *gpiox, const io_mode_alt_fun alt_fun_mode, const uint8_t io)
+{
+	// Retrieve index of Alt Fun register to be used
+	uint8_t AFR_Index = io / NO_OF_PINS_PER_REG;
+	gpiox->AFR[AFR_Index] |= (alt_fun_mode << (io * NO_OF_AFR_BITS));
+}
+
+void IO_Config(io_handle_t *io_handle)
+{
+    IO_SetMode(io_handle->GPIOx, io_handle->IO_Confg.PIN_MODE, io_handle->IO_Confg.PIN_NO);
+	IO_SetOPType(io_handle->GPIOx, io_handle->IO_Confg.PIN_OPTYPE, io_handle->IO_Confg.PIN_NO);
+    IO_SetResistance(io_handle->GPIOx, io_handle->IO_Confg.PIN_RESISTANCE, io_handle->IO_Confg.PIN_NO);
+	IO_SetSpeed(io_handle->GPIOx, io_handle->IO_Confg.PIN_SPEED, io_handle->IO_Confg.PIN_NO);
+	if (io_handle->IO_Confg.PIN_MODE == IO_MODE_ALT_FUN)
+		IO_SetAltFunMode(io_handle->GPIOx, io_handle->IO_Confg.PIN_ALT_FUN_MODE, io_handle->IO_Confg.PIN_NO);
 }
 
 /* Set, Clear, and Toggle Pin APIs */

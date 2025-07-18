@@ -11,6 +11,9 @@
 
 // #define SET_BIT		ENABLE
 
+#define NO_OF_PINS_PER_REG    8
+#define NO_OF_AFR_BITS        4
+
 #define IO_PIN_0        0U
 #define IO_PIN_1        1U
 #define IO_PIN_2        2U
@@ -175,6 +178,26 @@ typedef enum
 	IO_PORTD
 } io_port_e;
 
+typedef enum
+{
+  IO_ALT_FUN_MODE0,
+  IO_ALT_FUN_MODE1,
+  IO_ALT_FUN_MODE2,
+  IO_ALT_FUN_MODE3,
+  IO_ALT_FUN_MODE4,
+  IO_ALT_FUN_MODE5,
+  IO_ALT_FUN_MODE6,
+  IO_ALT_FUN_MODE7,
+  IO_ALT_FUN_MODE8,
+  IO_ALT_FUN_MODE9,
+  IO_ALT_FUN_MODE10,
+  IO_ALT_FUN_MODE11,
+  IO_ALT_FUN_MODE12,
+  IO_ALT_FUN_MODE13,
+  IO_ALT_FUN_MODE14,
+  IO_ALT_FUN_MODE15
+} io_mode_alt_fun;
+
 /* IO CONFIG STRUCT */
 typedef struct
 {
@@ -183,6 +206,7 @@ typedef struct
 	io_speed_e PIN_SPEED;               /*<! PIN SPEED OPTIONS FROM @io_speed_e >*/
 	io_optype_e PIN_OPTYPE;             /*<! PIN OUTPUT TYPE OPTIONS FROM @io_optype_e >*/
 	io_resistance_e PIN_RESISTANCE;     /*<! PIN RESISTOR OPTIONS FROM @io_resistance_e >*/
+  io_mode_alt_fun PIN_ALT_FUN_MODE;
 }io_config_t;
 
 typedef struct

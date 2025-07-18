@@ -21,6 +21,8 @@
 #include "usart.h"
 #include "gpio.h"
 #include "io.h"
+#include "uart.h"
+#include "string.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -59,17 +61,81 @@ void SystemClock_Config(void);
 
 /* USER CODE END 0 */
 
-volatile uint8_t flag;
+uint8_t buf[20] = "hello world\n\r";
 
 /**
  * @brief  The application entry point.
  * @retval int
  */
 
+// USART_Handle_t *USART1_Handle;
+// UART_HandleTypeDef *USART1_Handle;
+
+USART_Handle_t uart2_h;
+io_handle_t btn_h;
+
+void init_led_gpio(void)
+{
+	io_handle_t led_h;
+	led_h.GPIOx = GPIOA;
+
+	led_h.IO_Confg.PIN_NO = IO_PIN_5;
+	led_h.IO_Confg.PIN_MODE = IO_MODE_OUTPUT;
+	led_h.IO_Confg.PIN_SPEED = IO_SPEED_FAST;
+	led_h.IO_Confg.PIN_OPTYPE = IO_OPTYPE_PP;
+	led_h.IO_Confg.PIN_RESISTANCE = IO_RES_NOPUPD;
+
+	IO_Config(&led_h);
+}
+
+void init_btn_gpio(void)
+{
+	btn_h.GPIOx = GPIOC;
+
+	btn_h.IO_Confg.PIN_MODE = IO_MODE_INPUT;
+	btn_h.IO_Confg.PIN_NO = IO_PIN_13;
+	btn_h.IO_Confg.PIN_OPTYPE = IO_OPTYPE_PP;
+	btn_h.IO_Confg.PIN_RESISTANCE = IO_RES_NOPUPD;
+	btn_h.IO_Confg.PIN_SPEED = IO_SPEED_FAST;
+
+	IO_Config(&btn_h);
+}
+
+void init_usart_gpio(void)
+{
+	io_handle_t usart_io_pins;
+	usart_io_pins.GPIOx = GPIOA;
+	usart_io_pins.IO_Confg.PIN_MODE = IO_MODE_ALT_FUN;
+	usart_io_pins.IO_Confg.PIN_ALT_FUN_MODE = IO_ALT_FUN_MODE7;
+	usart_io_pins.IO_Confg.PIN_NO = IO_PIN_2;
+	usart_io_pins.IO_Confg.PIN_OPTYPE = IO_OPTYPE_PP;
+	usart_io_pins.IO_Confg.PIN_RESISTANCE = IO_RES_NOPUPD;
+	usart_io_pins.IO_Confg.PIN_SPEED = IO_SPEED_FAST;
+
+	IO_Config(&usart_io_pins);
+
+	usart_io_pins.IO_Confg.PIN_NO = IO_PIN_3;
+	IO_Config(&usart_io_pins);
+}
+
+void usart1_init(void)
+{
+	uart2_h.TX_STATE = USART_TX_READY;
+	uart2_h.USARTx = USART2;
+	uart2_h.USART_Confg.USART_BaudRate = 115200;
+	uart2_h.USART_Confg.USART_Mode = 0;
+	uart2_h.USART_Confg.USART_HWFlowCtrl = USART_NO_HWFlowCtrl;
+	uart2_h.USART_Confg.USART_ParityCtrl = USART_PARITY_CRL_DI;
+	uart2_h.USART_Confg.USART_WordLen = USART_WORD_LEN8;
+
+	usart_init(&uart2_h);
+}
+
 void led_blink(void)
 {
 	for (volatile int i = 0; i < 350000; ++i);
 	GPIOA->ODR ^= (0x1U << GPIO_ODR_OD5_Pos);
+	usart_send_data(&uart2_h, (uint8_t*)buf, strlen((char*)buf));
 }
 
 int main(void)
@@ -77,81 +143,30 @@ int main(void)
 	SystemClock_Config();
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
-	
-	io_config_t led_config =
-	{
-		.PIN_NO = IO_PIN_5,
-		.PIN_MODE = IO_MODE_OUTPUT,
-		.PIN_SPEED = IO_SPEED_FAST,
-		.PIN_OPTYPE = IO_OPTYPE_PP,
-		.PIN_RESISTANCE = IO_RES_NOPUPD
-	};
+	RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 
-	io_handle_t led_handle =
-	{
-		.GPIOx = GPIOA,
-		.IO_Confg = led_config
-	};
+	init_btn_gpio();
+	init_led_gpio();
+	init_usart_gpio();
+	usart1_init();
 
-	io_config_t btn_config = {
-		.PIN_MODE = IO_MODE_INPUT,
-		.PIN_NO = IO_PIN_13,
-		.PIN_OPTYPE = IO_OPTYPE_PP,
-		.PIN_RESISTANCE = IO_RES_NOPUPD,
-		.PIN_SPEED = IO_SPEED_FAST
-	};
-
-	io_handle_t btn_handle = {
-		.GPIOx = GPIOC,
-		.IO_Confg = btn_config
-	};
-
-	IO_Config(&btn_handle);
-	IO_Config(&led_handle);
-
-	IO_InitIT(&btn_handle, IO_INTERRUPT_RT, led_blink);
+	IO_InitIT(&btn_h, IO_INTERRUPT_RT, led_blink);
 	IO_SetInterruptPriority(EXTI15_10_IRQ_NO, 1);
 	IO_IRQEnableInterrupt(EXTI15_10_IRQ_NO);
 
-	while(1)
-	{
-	}
+	IO_SetInterruptPriority(USART2_IRQ_NO, 2);
+	USART_IRQEnableInterrupt(USART2_IRQ_NO);
+
+	while(1);
+
 	return 0;
 }
 
+void USART2_IRQHandler(void)
+{
+    usart_irq_handler(&uart2_h);
+}
 
-// static inline uint8_t retrieve_syscfg_exti_port(exti_line_e EXTIx)
-// {
-// 	uint8_t EXTICRx = EXTIx / 4;
-// 	uint8_t EXTI_Msk = 0x0F;
-
-// 	uint8_t current_port = (SYSCFG->EXTICR[EXTICRx] & ( EXTI_Msk << (EXTIx * 4) ));
-// 	return current_port;
-// }
-
-// static inline uint8_t get_exti_line(void)
-// {
-// 	for (uint8_t pin_trigger = EXTI_PR_PR5_Pos; pin_trigger < EXTI_PR_PR16_Pos; ++pin_trigger)
-// 	{
-// 		uint8_t check_pr_set = (EXTI->PR & (0x1 << pin_trigger));
-// 		if (check_pr_set == PRx_SET)
-// 		{
-// 			return check_pr_set;
-// 		} 
-// 	}
-// 	return NO_PRx_SET;
-// }
-
-// // void EXTI15_10_IRQHandler(void)
-// // {
-// // 	// 1. Get the pin that triggered Interrupt
-// // 	exti_line_e exti_line_trigger = get_exti_line();
-// // 	uint8_t exti_port = retrieve_syscfg_exti_port(exti_line_trigger);
-// // 	// 2. Execute ISR from isr_functions array
-// // 	// isr_functions[exti_port][exti_line_trigger]();
-// // 	// 3. Clear Pending Reg bit
-// // 	EXTI->PR |= (0x1U << exti_line_trigger);
-// // }
 /**
  * @brief System Clock Configuration
  * @retval None
