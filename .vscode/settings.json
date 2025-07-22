@@ -2,6 +2,7 @@
     "files.associations": {
         "gpio.h": "c",
         "main.h": "c",
-        "stddef.h": "c"
+        "stddef.h": "c",
+        "string.h": "c"
     }
 }

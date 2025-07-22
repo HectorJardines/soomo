@@ -23,6 +23,7 @@
 #include "io.h"
 #include "uart.h"
 #include "string.h"
+#include "pwm.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -80,7 +81,8 @@ void init_led_gpio(void)
 	led_h.GPIOx = GPIOA;
 
 	led_h.IO_Confg.PIN_NO = IO_PIN_5;
-	led_h.IO_Confg.PIN_MODE = IO_MODE_OUTPUT;
+	led_h.IO_Confg.PIN_MODE = IO_MODE_ALT_FUN;
+	led_h.IO_Confg.PIN_ALT_FUN_MODE = IO_ALT_FUN_MODE1;
 	led_h.IO_Confg.PIN_SPEED = IO_SPEED_FAST;
 	led_h.IO_Confg.PIN_OPTYPE = IO_OPTYPE_PP;
 	led_h.IO_Confg.PIN_RESISTANCE = IO_RES_NOPUPD;
@@ -142,22 +144,31 @@ int main(void)
 {
 	SystemClock_Config();
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
-	RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
+	// RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
+	// RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 
-	init_btn_gpio();
+	// init_btn_gpio();
 	init_led_gpio();
-	init_usart_gpio();
-	usart1_init();
+	// init_usart_gpio();
+	// usart1_init();
 
-	IO_InitIT(&btn_h, IO_INTERRUPT_RT, led_blink);
-	IO_SetInterruptPriority(EXTI15_10_IRQ_NO, 1);
-	IO_IRQEnableInterrupt(EXTI15_10_IRQ_NO);
+	// IO_InitIT(&btn_h, IO_INTERRUPT_RT, led_blink);
+	// IO_SetInterruptPriority(EXTI15_10_IRQ_NO, 1);
+	// IO_IRQEnableInterrupt(EXTI15_10_IRQ_NO);
 
-	IO_SetInterruptPriority(USART2_IRQ_NO, 2);
-	USART_IRQEnableInterrupt(USART2_IRQ_NO);
+	// IO_SetInterruptPriority(USART2_IRQ_NO, 2);
+	// USART_IRQEnableInterrupt(USART2_IRQ_NO);
 
-	while(1);
+	const uint8_t duty_cycles[] = {100, 75, 25, 1, 0};
+	// const uint16_t delay = 3000;
+	pwm_init();
+	uint8_t i = 0;
+	while(1)
+	{
+		for (volatile int j = 0; j < 350000; ++j);
+		pwm_set_duty_cycle(PWM_TB6612FNG_LEFT, duty_cycles[i]);
+		i = ((i + 1) % 5);
+	}
 
 	return 0;
 }
