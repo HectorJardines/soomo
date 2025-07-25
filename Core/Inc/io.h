@@ -36,7 +36,7 @@
 
 #define DISABLE_IMR_MASK  1U
 
-#define IO_PORT_CNT           4U
+#define IO_PORT_CNT           3U
 #define IO_PIN_CNT_PER_PORT   16U
 
 #define PRx_SET     1U
@@ -67,63 +67,79 @@
 
 typedef enum
 {
-  GPIO_UNUSED_1,
-  GPIO_UNUSED_2,
-  GPIO_UNUSED_3,
-  GPIO_UNUSED_4,
-  GPIO_UNUSED_5,
-  GPIO_UNUSED_6,
-  GPIO_UNUSED_7,
-  GPIO_UNUSED_8,
-  GPIO_UNUSED_9,
-  GPIO_UNUSED_10,
-  GPIO_UNUSED_11,
-  GPIO_UNUSED_12,
-  GPIO_UNUSED_13,
-  GPIO_UNUSED_14,
-  GPIO_UNUSED_15,
-  GPIO_UNUSED_16,
-  GPIO_UNUSED_17,
-  GPIO_UNUSED_18,
-  GPIO_UNUSED_19,
-  GPIO_UNUSED_20,
-  GPIO_UNUSED_21,
-  GPIO_UNUSED_22,
-  GPIO_UNUSED_23,
-  GPIO_UNUSED_24,
-  GPIO_UNUSED_25,
-  GPIO_UNUSED_26,
-  GPIO_UNUSED_27,
-  GPIO_UNUSED_28,
-  GPIO_UNUSED_29,
-  GPIO_UNUSED_30,
-  GPIO_UNUSED_31,
-  GPIO_UNUSED_32,
-  GPIO_UNUSED_33,
-  GPIO_UNUSED_34,
-  GPIO_UNUSED_35,
-  GPIO_UNUSED_36,
-  GPIO_UNUSED_37,
-  GPIO_UNUSED_38,
-  GPIO_UNUSED_39,
-  GPIO_UNUSED_40,
-  GPIO_UNUSED_41,
-  GPIO_UNUSED_42,
-  GPIO_UNUSED_43,
-  GPIO_UNUSED_44,
-  GPIO_UNUSED_45,
-  GPIO_UNUSED_46,
-  GPIO_UNUSED_47,
-  GPIO_UNUSED_48,
-  GPIO_UNUSED_49,
-  GPIO_UNUSED_50
+  // PORTA PINS
+  IO_A0, IO_A1, IO_A2, IO_A3, 
+  IO_A4, IO_A5, IO_A6, IO_A7, 
+  IO_A8, IO_A9, IO_A10, IO_A11, 
+  IO_A12, IO_A13, IO_A14, IO_A15,
+  
+  // PORTB PINS
+  IO_B0, IO_B1, IO_B2, IO_B3,
+  IO_B4, IO_B5, IO_B6, IO_B7,
+  IO_B8, IO_B9, IO_B10, IO_B11,
+  IO_B12, IO_B13, IO_B14, IO_B15,
+
+  //PORTC PINS
+  IO_C0, IO_C1, IO_C2, IO_C3,
+  IO_C4, IO_C5, IO_C6, IO_C7,
+  IO_C8, IO_C9, IO_C10, IO_C11,
+  IO_C12, IO_C13, IO_C14, IO_C15
 } generic_io_e;
 
 typedef enum
 {
   // TODO: DEFINE IO PINS WITH NAMES TO BE USED FOR SENSORS,
   //       MOTOR DRIVERS, TIMERS, UART, ETC.
-  IO_MOTOR_PWM
+  IO_PWM_MOTOR_LEFT = IO_A0,
+  IO_PWM_MOTOR_RIGHT = IO_A1,
+  IO_UART_TX = IO_A2,
+  IO_UART_RX = IO_A3,
+  IO_UNUSED_2 = IO_A4,
+  IO_TEST_LED = IO_A5,
+  IO_UNUSED_4 = IO_A6,
+  IO_UNUSED_5 = IO_A7,
+  IO_UNUSED_6 = IO_A8,
+  IO_UNUSED_7 = IO_A9,
+  IO_UNUSED_8 = IO_A10,
+  IO_UNUSED_9 = IO_A11,
+  IO_UNUSED_10 = IO_A12,
+  IO_UNUSED_11 = IO_A13,
+  IO_UNUSED_12 = IO_A14,
+  IO_UNUSED_13 = IO_A15,
+
+  IO_UNUSED_14 = IO_B0,
+  IO_MOTORS_RIGHT_CC2 = IO_B1,
+  IO_MOTORS_RIGHT_CC1 = IO_B2,
+  IO_UNUSED_17 = IO_B3,
+  IO_UNUSED_18 = IO_B4,
+  IO_UNUSED_19 = IO_B5,
+  IO_UNUSED_20 = IO_B6,
+  IO_UNUSED_21 = IO_B7,
+  IO_UNUSED_22 = IO_B8,
+  IO_UNUSED_23 = IO_B9,
+  IO_UNUSED_24 = IO_B10,
+  IO_UNUSED_25 = IO_B11,
+  IO_UNUSED_26 = IO_B12,
+  IO_UNUSED_27 = IO_B13,
+  IO_UNUSED_28 = IO_B14,
+  IO_UNUSED_29 = IO_B15,
+
+  IO_UNUSED_30 = IO_C0,
+  IO_UNUSED_31 = IO_C1,
+  IO_MOTORS_LEFT_CC2 = IO_C2,
+  IO_MOTORS_LEFT_CC1 = IO_C3,
+  IO_UNUSED_34 = IO_C4,
+  IO_UNUSED_35 = IO_C5,
+  IO_UNUSED_36 = IO_C6,
+  IO_UNUSED_37 = IO_C7,
+  IO_UNUSED_38 = IO_C8,
+  IO_UNUSED_39 = IO_C9,
+  IO_UNUSED_40 = IO_C10,
+  IO_UNUSED_41 = IO_C11,
+  IO_UNUSED_42 = IO_C12,
+  IO_UNUSED_43 = IO_C13,
+  IO_UNUSED_44 = IO_C14,
+  IO_UNUSED_45 = IO_C15,
 } io_e;
 
 typedef enum
@@ -234,6 +250,11 @@ typedef enum
 	EXTI15_10_IRQ_NO = 40
 }exti_irqn_e;
 
+typedef enum
+{
+  LOW,
+  HIGH
+}io_value_e;
 
 /********************************************
 *                 IO APIs
@@ -249,6 +270,7 @@ void IO_SetSpeed(GPIO_TypeDef *gpiox, const io_speed_e speed, const uint8_t io);
 void IO_SetOPType(GPIO_TypeDef *gpiox, const io_optype_e optype, const uint8_t io);
 
 /* Set, Clear, and Toggle Pin APIs */
+void io_write_pin(io_e io, io_value_e value);
 void IO_SetPin(io_handle_t *io_handle);
 void IO_ClearPin(io_handle_t *io_handle);
 void IO_TogglePin(io_handle_t *io_handle);

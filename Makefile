@@ -47,6 +47,7 @@ Core/Src/gpio.c \
 Core/Src/usart.c \
 Core/Src/uart.c \
 Core/Src/pwm.c \
+Core/Src/tb6612fng.c \
 Core/Src/stm32f4xx_it.c \
 Core/Src/stm32f4xx_hal_msp.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \

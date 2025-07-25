@@ -33,9 +33,9 @@ void pwm_init(void)
 
     tim2_clock_enable();
     // 1. Configure output pin
-    TIM2->CCMR1 &= ~(TIM_CCMR1_CC1S);
-    TIM2->CCER |= (TIM_CCER_CC1P);
-    TIM2->CCMR1 |= (0x7U << TIM_CCMR1_OC1M_Pos);
+    TIM2->CCMR1 &= ~(TIM_CCMR1_CC1S | TIM_CCMR1_CC2S);
+    TIM2->CCER |= (TIM_CCER_CC1P | TIM_CCER_CC2P);
+    TIM2->CCMR1 |= ((0x7U << TIM_CCMR1_OC1M_Pos) | (0x7U << TIM_CCMR1_OC2M_Pos));
 
     // 2. Set timer period in Auto Reload Reg (count from 0 - 99)
     TIM2->PSC = (PWM_TIMER_PSC);
@@ -66,6 +66,10 @@ static void pwm_enable(bool enable)
     { 
         TIM2->CCER |= (TIM_CCER_CC1E);
         TIM2->CR1 |= (TIM_CR1_CEN);
+    }
+    else if (pwm_enabled != enable && enable == false)
+    {
+        TIM2->CR1 &= ~(TIM_CR1_CEN);
     }
     pwm_enabled = enable;
 }

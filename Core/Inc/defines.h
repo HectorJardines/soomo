@@ -5,4 +5,6 @@
 #define SYS_CLK              16000000UL
 #define TIMER_INPUT_DIVIDER3 8
 
+#define ARRAY_SIZE(arr)     (sizeof(arr) / sizeof(arr[0]))
+
 #endif
