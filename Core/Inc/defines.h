@@ -6,5 +6,7 @@
 #define TIMER_INPUT_DIVIDER3 8
 
 #define ARRAY_SIZE(arr)     (sizeof(arr) / sizeof(arr[0]))
+#define MOD_2(n)            (n & 1)
+#define ABS(n)              ((n) >= 0 ? n : -(n))
 
 #endif

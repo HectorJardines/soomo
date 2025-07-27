@@ -261,6 +261,7 @@ void USART_SendData(USART_Handle_t *pUSARTHandle, uint8_t *pTxBuffer, uint32_t L
 void _putchar(char c)
 {
     // 8-bit data transmission with 1 stop bit and no parity bit enabled
+    
 }
 
 void USART_IRQEnableInterrupt(uint16_t EXTI_IRQn)

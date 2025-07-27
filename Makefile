@@ -48,6 +48,9 @@ Core/Src/usart.c \
 Core/Src/uart.c \
 Core/Src/pwm.c \
 Core/Src/tb6612fng.c \
+Core/external/printf/printf.c \
+Core/Src/adc.c \
+Core/Src/drive.c \
 Core/Src/stm32f4xx_it.c \
 Core/Src/stm32f4xx_hal_msp.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
@@ -116,7 +119,8 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
--DSTM32F446xx
+-DSTM32F446xx \
+-DPRINTF_INCLUDE_CONFIG_H \
 
 
 # AS includes
