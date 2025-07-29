@@ -40,9 +40,6 @@ typedef struct
 
  typedef struct
 {
-    uint8_t     TX_STATE;
-    uint8_t     *TxBuf;
-    uint32_t    TxLen;
     USART_Config_t USART_Confg;
     USART_TypeDef *USARTx;
 }USART_Handle_t;
@@ -99,7 +96,7 @@ typedef enum
  *          USART User-defined APIs
  *********************************************/
 
-void usart_init(USART_Handle_t *USART_Handle);
+void usart_init(void);
 void usart_enable_peripheral(USART_TypeDef *pUSARTx);
 void usart_configure(USART_Handle_t *USART_Handle);
 void _putchar(char c);

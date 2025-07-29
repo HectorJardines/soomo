@@ -1,9 +1,14 @@
 #include "uart.h"
+#include "ring_buffer.h"
 
-void usart_init(USART_Handle_t *USART_Handle)
-{
-    usart_configure(USART_Handle);
-}
+#define UART_BUFFER_SIZE    (16U)
+static uint8_t buffer[UART_BUFFER_SIZE];
+static struct ring_buffer tx_buf = {.buf = buffer, .buf_size = sizeof(buffer), .elem_size = sizeof(uint8_t), .head = 0, .tail = 0};
+static USART_Handle_t usart2_h = {{.USART_Mode = 0, .USART_ParityCtrl = USART_PARITY_CRL_DI, .USART_NO_OF_STOP_BITS = USART_STOP_BITS1, .USART_WordLen = USART_WORD_LEN8, .USART_BaudRate = 115200, .USART_HWFlowCtrl = USART_NO_HWFlowCtrl}, .USARTx = USART2};
+
+/********************************************************
+ *                     USART CONFG APIs
+ ********************************************************/
 
 static inline void usart_set_mode(USART_TypeDef *pUSARTx)
 {
@@ -131,100 +136,56 @@ void usart_configure(USART_Handle_t *USART_Handle)
     usart_set_stop_bits(USART_Handle->USARTx, USART_Handle->USART_Confg.USART_NO_OF_STOP_BITS);
 }
 
-static void clear_tx_interrupt(USART_TypeDef *pUSARTx)
+/********************************************************
+ *                     USART IT APIs
+ ********************************************************/
+
+static void usart_tx_interrupt_enable(void)
 {
-    uint8_t dummy_write = 0xFF;
-    pUSARTx->DR |= dummy_write;
-    (void) dummy_write;
+    USART2->CR1 |= USART_CR1_TXEIE;
 }
 
-static void usart_tx_interrupt_enable(USART_TypeDef *pUSARTx)
+static void usart_tx_interrupt_disable(void)
 {
-    pUSARTx->CR1 |= USART_CR1_TXEIE;
+    USART2->CR1 &= ~(USART_CR1_TXEIE);
 }
 
-static void usart_tx_interrupt_disable(USART_TypeDef *pUSARTx)
+static void usart_start_tx(void)
 {
-    pUSARTx->CR1 &= ~(USART_CR1_TXEIE);
+    if (!ring_buffer_empty(&tx_buf))
+    {
+        char c = 0;
+        ring_buffer_peek_tail(&tx_buf, &c);
+        USART2->DR = c;
+    }
 }
 
-static void usart_tc_interrupt_enable(USART_TypeDef *pUSART)
+void _putchar(char c)
 {
-    pUSART->CR1 |= USART_CR1_TCIE;
-}
-
-static void usart_clear_tc(USART_TypeDef *pUSARTx)
-{
-    uint8_t dummy_read, dummy_write;
-    dummy_write = 0x00;
-
-    dummy_read = pUSARTx->SR;
-    pUSARTx->DR |= dummy_write;
-
-    (void)dummy_read;
-    (void)dummy_write;
-}
-
-uint8_t usart_send_data(USART_Handle_t *pUSART_Handle, uint8_t *pTxBuf, uint32_t txLen)
-{
-    uint8_t txState = pUSART_Handle->TX_STATE;
+    if (c == '\n')
+        _putchar('\r');
     // 1. Ensure that transmission is not already happening
-    if (txState != USART_BUSY_IN_TX)
-    {
-        pUSART_Handle->TX_STATE = USART_BUSY_IN_TX;
-        pUSART_Handle->TxBuf = pTxBuf;
-        pUSART_Handle->TxLen = txLen;
+    while(ring_buffer_full(&tx_buf));
 
-        usart_tx_interrupt_enable(pUSART_Handle->USARTx);
-        usart_tc_interrupt_enable(pUSART_Handle->USARTx);
-    }
-    return txState;
+    usart_tx_interrupt_disable();
+    const bool tx_ongoing = !(ring_buffer_empty(&tx_buf));
+    ring_buffer_push(&tx_buf, &c);
+
+    if (!tx_ongoing)
+        usart_start_tx();
+
+    usart_tx_interrupt_enable();
 }
 
-void usart_irq_handler(USART_Handle_t *pUSART_Handle)
+void USART2_IRQHandler(void)
 {
-    uint8_t interrupt_trigger, interrupt_enabled;
     /************************ USART TXE IT ***********************/
-    interrupt_trigger = pUSART_Handle->USARTx->SR & (USART_SR_TXE_Msk);
-    interrupt_enabled = pUSART_Handle->USARTx->CR1 & (USART_CR1_TXEIE_Msk);
-    if (interrupt_trigger && interrupt_enabled)
-    {
-        if (pUSART_Handle->TX_STATE == USART_BUSY_IN_TX)
-        {
-            if (pUSART_Handle->TxLen > 0)
-            {
-                // transmit 1 data word of len 8 with one stop bit and no parity control
-                pUSART_Handle->USARTx->DR = (*(pUSART_Handle->TxBuf) & ((uint8_t) 0xFF));
-                pUSART_Handle->TxBuf++;
-                pUSART_Handle->TxLen--;
-            }
-            if (pUSART_Handle->TxLen < 1)
-            {
-                // DISABLE TXE INTERRUPTS TRANSMISSION IS COMPLETE
-                usart_tx_interrupt_disable(pUSART_Handle->USARTx);
-            }
-        }
-    }
-    /************************ USART TC IT  ***********************/
-    interrupt_trigger = pUSART_Handle->USARTx->SR & (USART_SR_TC_Msk);
-    interrupt_enabled = pUSART_Handle->USARTx->CR1 & (USART_CR1_TCIE_Msk);
+    ring_buffer_pop(&tx_buf);
+    if (!ring_buffer_empty(&tx_buf))
+        usart_start_tx();
 
-    if (interrupt_trigger && interrupt_enabled)
-    {
-        if(pUSART_Handle->TX_STATE == USART_BUSY_IN_TX)
-        {
-            if (pUSART_Handle->TxLen < 1)
-            {
-                // usart_clear_tc(pUSART_Handle->USARTx);
-                pUSART_Handle->USARTx->SR &= ~(USART_SR_TC);
-                pUSART_Handle->USARTx->CR1 &= ~(USART_CR1_TCIE);
-
-                pUSART_Handle->TX_STATE = USART_TX_READY;
-                pUSART_Handle->TxBuf = NULL;
-                pUSART_Handle->TxLen = 0;
-            }
-        }
-    }
+    if (ring_buffer_empty(&tx_buf))
+        usart_tx_interrupt_disable();
 }
 
 static uint8_t USART_GetFlagStatus(USART_TypeDef *pUSARTx, uint8_t flag)
@@ -258,10 +219,13 @@ void USART_SendData(USART_Handle_t *pUSARTHandle, uint8_t *pTxBuffer, uint32_t L
 	while( ! USART_GetFlagStatus(pUSARTHandle->USARTx, USART_SR_TC));
 }
 
-void _putchar(char c)
+static void usart_irq_priority_set(uint16_t EXTI_IRQn, uint8_t IRQ_PR)
 {
-    // 8-bit data transmission with 1 stop bit and no parity bit enabled
-    
+    uint8_t IPRx = EXTI_IRQn / 4;
+	uint8_t IPRx_section = EXTI_IRQn % 4;
+
+	uint8_t shift_amount = ((NVIC_IPRn_OFFSET_MULTIPLIER * IPRx_section) + (TOTAL_NVIC_PR_BITS - NO_PR_BITS_EN));
+	*(NVIC_PR_BASE_ADDR + IPRx) |= (IRQ_PR << (shift_amount));
 }
 
 void USART_IRQEnableInterrupt(uint16_t EXTI_IRQn)
@@ -294,4 +258,25 @@ void USART_IRQDisableIT(uint16_t EXTI_IRQn)
 	{
 		*NVIC_ICER2 |= ( ENABLE << ( EXTI_IRQn % 64 ));
 	}
+}
+
+static inline void usart_peripheral_control_enable(void)
+{
+    // Only concerned with USART2, could abstract to include all USART peripherals
+    RCC->APB1ENR |= (RCC_APB1ENR_USART2EN);
+}
+
+static inline void usart_peripheral_control_disable(void)
+{
+    // Only concerned with USART2, could abstract to include all USART peripherals
+    RCC->APB1ENR &= ~(RCC_APB1ENR_USART2EN);
+}
+
+void usart_init(void)
+{
+    usart_peripheral_control_enable();
+    usart_configure(&usart2_h);
+    
+    usart_irq_priority_set(USART2_IRQ_NO, 2);
+    USART_IRQEnableInterrupt(USART2_IRQ_NO);
 }

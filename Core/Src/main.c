@@ -103,36 +103,6 @@ void init_btn_gpio(void)
 	IO_Config(&btn_h);
 }
 
-void init_usart_gpio(void)
-{
-	io_handle_t usart_io_pins;
-	usart_io_pins.GPIOx = GPIOA;
-	usart_io_pins.IO_Confg.PIN_MODE = IO_MODE_ALT_FUN;
-	usart_io_pins.IO_Confg.PIN_ALT_FUN_MODE = IO_ALT_FUN_MODE7;
-	usart_io_pins.IO_Confg.PIN_NO = IO_PIN_2;
-	usart_io_pins.IO_Confg.PIN_OPTYPE = IO_OPTYPE_PP;
-	usart_io_pins.IO_Confg.PIN_RESISTANCE = IO_RES_NOPUPD;
-	usart_io_pins.IO_Confg.PIN_SPEED = IO_SPEED_FAST;
-
-	IO_Config(&usart_io_pins);
-
-	usart_io_pins.IO_Confg.PIN_NO = IO_PIN_3;
-	IO_Config(&usart_io_pins);
-}
-
-void usart1_init(void)
-{
-	uart2_h.TX_STATE = USART_TX_READY;
-	uart2_h.USARTx = USART2;
-	uart2_h.USART_Confg.USART_BaudRate = 115200;
-	uart2_h.USART_Confg.USART_Mode = 0;
-	uart2_h.USART_Confg.USART_HWFlowCtrl = USART_NO_HWFlowCtrl;
-	uart2_h.USART_Confg.USART_ParityCtrl = USART_PARITY_CRL_DI;
-	uart2_h.USART_Confg.USART_WordLen = USART_WORD_LEN8;
-
-	usart_init(&uart2_h);
-}
-
 void led_blink(void)
 {
 	for (volatile int i = 0; i < 350000; ++i);
@@ -140,43 +110,26 @@ void led_blink(void)
 	usart_send_data(&uart2_h, (uint8_t*)buf, strlen((char*)buf));
 }
 
-int main(void)
-{
-	SystemClock_Config();
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
-	// RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
-	// RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
+// int main(void)
+// {
+// 	SystemClock_Config();
 
-	// init_btn_gpio();
-	init_led_gpio();
-	// init_usart_gpio();
-	// usart1_init();
+// 	IO_Init();
 
-	// IO_InitIT(&btn_h, IO_INTERRUPT_RT, led_blink);
-	// IO_SetInterruptPriority(EXTI15_10_IRQ_NO, 1);
-	// IO_IRQEnableInterrupt(EXTI15_10_IRQ_NO);
+// 	const uint8_t duty_cycles[] = {100, 75, 25, 1, 0};
+// 	// const uint16_t delay = 3000;
+// 	pwm_init();
+// 	uint8_t i = 0;
+// 	while(1)
+// 	{
+// 		for (volatile int j = 0; j < 350000; ++j);
+// 		pwm_set_duty_cycle(PWM_TB6612FNG_LEFT, duty_cycles[i]);
+// 		i = ((i + 1) % 5);
+// 	}
 
-	// IO_SetInterruptPriority(USART2_IRQ_NO, 2);
-	// USART_IRQEnableInterrupt(USART2_IRQ_NO);
+// 	return 0;
+// }
 
-	const uint8_t duty_cycles[] = {100, 75, 25, 1, 0};
-	// const uint16_t delay = 3000;
-	pwm_init();
-	uint8_t i = 0;
-	while(1)
-	{
-		for (volatile int j = 0; j < 350000; ++j);
-		pwm_set_duty_cycle(PWM_TB6612FNG_LEFT, duty_cycles[i]);
-		i = ((i + 1) % 5);
-	}
-
-	return 0;
-}
-
-void USART2_IRQHandler(void)
-{
-    usart_irq_handler(&uart2_h);
-}
 
 /**
  * @brief System Clock Configuration

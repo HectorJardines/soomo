@@ -75,6 +75,7 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 void led_blink(void);
+void SystemClock_Config(void);
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

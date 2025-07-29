@@ -11,7 +11,8 @@
 #include "defines.h"
 
 #define ANALOG_IO_CONFG(GPIOX, IO_PIN_NO)	{(GPIOX), {(IO_PIN_NO), IO_MODE_ANALOG, IO_SPEED_FAST, IO_OPTYPE_PP, IO_RES_NOPUPD}}
-#define UNUSED_IO_CONFG(GPIOX, IO_PIN_NO) 	{(GPIOX), {(IO_PIN_NO), IO_MODE_OUTPUT, IO_SPEED_FAST, IO_OPTYPE_PP, IO_RES_PD}}
+// #define UNUSED_IO_CONFG(GPIOX, IO_PIN_NO) 	{(GPIOX), {(IO_PIN_NO), IO_MODE_OUTPUT, IO_SPEED_FAST, IO_OPTYPE_PP, IO_RES_PD}}
+#define UNUSED_IO_CONFG(GPIOX, IO_PIN_NO)	{NULL, {16}}
 /********************************************
  * 				STATIC IO ARRAYS
  ********************************************/
@@ -87,11 +88,16 @@ static inline io_port_e IO_GetPort(GPIO_TypeDef *GPIOx)
 	else
 		return IO_PORTD;
 }
+static bool compare_io_unused(const io_handle_t *io_h)
+{
+	return (io_h->GPIOx == NULL) && (io_h->IO_Confg.PIN_NO == 16);
+}
 
 void IO_Init()
 {
-	for (io_e io = (io_e)IO_A0; io < ARRAY_SIZE(io_confgs); io++)
-		IO_Config(&io_confgs[io]);
+	for (generic_io_e io = (generic_io_e)IO_A0; io < ARRAY_SIZE(io_confgs); io++)
+		if (!compare_io_unused(&io_confgs[io]))
+			IO_Config(&io_confgs[io]);
 	return;
 }
 
@@ -175,6 +181,28 @@ static void IO_SetAltFunMode(GPIO_TypeDef *gpiox, const io_mode_alt_fun alt_fun_
 	gpiox->AFR[AFR_Index] |= (alt_fun_mode << (io * NO_OF_AFR_BITS));
 }
 
+static void io_peripheral_control(GPIO_TypeDef *gpiox, uint8_t EnOrDi)
+{
+	if (EnOrDi == ENABLE)
+	{
+		if (gpiox == GPIOA)
+			RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+		if (gpiox == GPIOB)
+			RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
+		if (gpiox == GPIOC)
+			RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
+	}
+	else
+	{
+		if (gpiox == GPIOA)
+			RCC->AHB1ENR &= ~(RCC_AHB1ENR_GPIOAEN);
+		if (gpiox == GPIOB)
+			RCC->AHB1ENR &= ~(RCC_AHB1ENR_GPIOBEN);
+		if (gpiox == GPIOC)
+			RCC->AHB1ENR &= ~(RCC_AHB1ENR_GPIOCEN);
+	}
+}
+
 void IO_Config(io_handle_t *io_handle)
 {
     IO_SetMode(io_handle->GPIOx, io_handle->IO_Confg.PIN_MODE, io_handle->IO_Confg.PIN_NO);
@@ -183,6 +211,8 @@ void IO_Config(io_handle_t *io_handle)
 	IO_SetSpeed(io_handle->GPIOx, io_handle->IO_Confg.PIN_SPEED, io_handle->IO_Confg.PIN_NO);
 	if (io_handle->IO_Confg.PIN_MODE == IO_MODE_ALT_FUN)
 		IO_SetAltFunMode(io_handle->GPIOx, io_handle->IO_Confg.PIN_ALT_FUN_MODE, io_handle->IO_Confg.PIN_NO);
+	
+	io_peripheral_control(io_handle->GPIOx, ENABLE);
 }
 
 /* Set, Clear, and Toggle Pin APIs */
