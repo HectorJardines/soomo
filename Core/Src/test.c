@@ -2,6 +2,7 @@
 #include "uart.h"
 #include "io.h"
 #include "../external/printf/printf.h"
+#include "trace.h"
 
 static void test_setup(void)
 {
@@ -38,10 +39,10 @@ static void test_uart(void)
 static void test_trace(void)
 {
     test_setup();
-    usart_init();
+    trace_init();
     while(1)
     {
-        printf("Hello World %d\n", 2025);
+        TRACE("Hello World %d", 2025);
         for (volatile int i = 0; i < 350000; ++i);
     }
 }
