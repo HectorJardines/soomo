@@ -180,7 +180,9 @@ void _putchar(char c)
 void USART2_IRQHandler(void)
 {
     /************************ USART TXE IT ***********************/
-    ring_buffer_pop(&tx_buf);
+    while(ring_buffer_empty(&tx_buf));
+
+    ring_buffer_pop(&tx_buf, NULL);
     if (!ring_buffer_empty(&tx_buf))
         usart_start_tx();
 

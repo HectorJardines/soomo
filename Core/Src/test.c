@@ -1,16 +1,17 @@
 #include "main.h"
 #include "uart.h"
 #include "io.h"
+#include "../external/printf/printf.h"
 
-void test_setup(void)
+static void test_setup(void)
 {
     SystemClock_Config();
+    IO_Init();
 }
 
-void test_io_led(void)
+static void test_io_led(void)
 {
     test_setup();
-    IO_Init();
     while (1)
     {
         HAL_Delay(500);
@@ -18,10 +19,9 @@ void test_io_led(void)
     }
 }
 
-void test_uart(void)
+static void test_uart(void)
 {
     test_setup();
-    IO_Init();
     usart_init();
     while(1)
     {
@@ -35,8 +35,19 @@ void test_uart(void)
     }
 }
 
+static void test_trace(void)
+{
+    test_setup();
+    usart_init();
+    while(1)
+    {
+        printf("Hello World %d\n", 2025);
+        for (volatile int i = 0; i < 350000; ++i);
+    }
+}
+
 int main(void)
 {
-    test_uart();
+    test_trace();
     return 0;
 }

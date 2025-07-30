@@ -13,8 +13,8 @@ struct ring_buffer
     uint8_t tail;
 };
 
-void ring_buffer_push(struct ring_buffer *buf, char *data);
-uint8_t ring_buffer_pop(struct ring_buffer *buf);
+void ring_buffer_push(struct ring_buffer *rb, void *data);
+void ring_buffer_pop(struct ring_buffer *rb, void *data);
 void ring_buffer_peek_tail(const struct ring_buffer *rb, void *data);
 void ring_buffer_peek_head(const struct ring_buffer *rb, void *data, uint8_t offset);
 bool ring_buffer_full(struct ring_buffer *rb);
