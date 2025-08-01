@@ -3,6 +3,7 @@
 #include "io.h"
 #include "../external/printf/printf.h"
 #include "trace.h"
+#include "assert_handler.h"
 
 static void test_setup(void)
 {
@@ -17,6 +18,15 @@ static void test_io_led(void)
     {
         HAL_Delay(500);
         GPIOA->ODR ^= (0x1U << GPIO_ODR_OD5_Pos);
+    }
+}
+
+static void test_assert_led(void)
+{
+    test_setup();
+    while(1)
+    {
+        ASSERT(0);
     }
 }
 
@@ -49,6 +59,6 @@ static void test_trace(void)
 
 int main(void)
 {
-    test_trace();
+    test_assert_led();
     return 0;
 }

@@ -97,16 +97,13 @@ typedef enum
  *********************************************/
 
 void usart_init(void);
-void usart_enable_peripheral(USART_TypeDef *pUSARTx);
-void usart_configure(USART_Handle_t *USART_Handle);
 void _putchar(char c);
 /* TODO: ABSTRACT INTERRUPT ENABLING FUNCTION FROM IO FILE TO INTERRUPT HEADER */
-
-uint8_t usart_send_data(USART_Handle_t *pUSART_Handle, uint8_t *pTxBuf, uint32_t txLen);
-void USART_SendData(USART_Handle_t *pUSARTHandle, uint8_t *pTxBuffer, uint32_t Len);
-void usart_irq_handler(USART_Handle_t *pUSART_Handle);
-
 void USART_IRQEnableInterrupt(uint16_t EXTI_IRQn);
 void USART_IRQDisableIT(uint16_t EXTI_IRQn);
+
+/* UART ASSERT CONFIGURATION */
+void usart_assert_init(void);
+void usart_trace_assert(const char *string);
 
 #endif

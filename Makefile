@@ -54,6 +54,7 @@ Core/Src/adc.c \
 Core/Src/drive.c \
 Core/Src/test.c \
 Core/Src/trace.c \
+Core/Src/assert_handler.c \
 Core/Src/stm32f4xx_it.c \
 Core/Src/stm32f4xx_hal_msp.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \

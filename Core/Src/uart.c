@@ -15,7 +15,7 @@ static inline void usart_set_mode(USART_TypeDef *pUSARTx)
     pUSARTx->CR1 |= USART_CR1_TE | USART_CR1_RE;
 }
 
-static inline void usart_set_baud_rate(USART_TypeDef *pUSARTx, uint32_t BaudRate)
+static void usart_set_baud_rate(USART_TypeDef *pUSARTx, uint32_t BaudRate)
 {
     // Tx/Rx baud = fCLK / (8 * ( 2 - OVER8 ) * USARTDIV)
     // USARTDIV = fCLK / ( 8 * (2 - OVER8 ) * baud)
@@ -55,7 +55,7 @@ static inline void usart_set_baud_rate(USART_TypeDef *pUSARTx, uint32_t BaudRate
     pUSARTx->BRR = BRR_Value;
 }
 
-static inline void usart_set_parity_ctrl(USART_TypeDef *pUSARTx, uint8_t ParityEnOrDi)
+static void usart_set_parity_ctrl(USART_TypeDef *pUSARTx, uint8_t ParityEnOrDi)
 {
     switch (ParityEnOrDi)
     {
@@ -72,7 +72,7 @@ static inline void usart_set_parity_ctrl(USART_TypeDef *pUSARTx, uint8_t ParityE
     }
 }
 
-static inline void usart_set_word_length(USART_TypeDef *pUSARTx, uint8_t WordLen)
+static void usart_set_word_length(USART_TypeDef *pUSARTx, uint8_t WordLen)
 {
     if (WordLen == USART_WORD_LEN9)
         pUSARTx->CR1 |= USART_CR1_M;
@@ -80,7 +80,7 @@ static inline void usart_set_word_length(USART_TypeDef *pUSARTx, uint8_t WordLen
         pUSARTx->CR1 &= ~(USART_CR1_M);
 }
 
-static inline void usart_set_hwflow_ctrl(USART_TypeDef *pUSARTx, uint8_t HWFlowCtrl)
+static void usart_set_hwflow_ctrl(USART_TypeDef *pUSARTx, uint8_t HWFlowCtrl)
 {
     switch (HWFlowCtrl)
     {
@@ -100,7 +100,7 @@ static inline void usart_set_hwflow_ctrl(USART_TypeDef *pUSARTx, uint8_t HWFlowC
     }
 }
 
-static inline void usart_set_stop_bits(USART_TypeDef *pUSARTx, uint8_t StopBits)
+static void usart_set_stop_bits(USART_TypeDef *pUSARTx, uint8_t StopBits)
 {
     switch (StopBits)
     {
@@ -119,12 +119,12 @@ static inline void usart_set_stop_bits(USART_TypeDef *pUSARTx, uint8_t StopBits)
     }
 }
 
-void usart_enable_peripheral(USART_TypeDef *pUSARTx)
+static void usart_enable_peripheral(USART_TypeDef *pUSARTx)
 {
     pUSARTx->CR1 |= (USART_CR1_UE);
 }
 
-void usart_configure(USART_Handle_t *USART_Handle)
+static void usart_configure(USART_Handle_t *USART_Handle)
 {
     usart_enable_peripheral(USART_Handle->USARTx);
 
@@ -199,28 +199,6 @@ static uint8_t USART_GetFlagStatus(USART_TypeDef *pUSARTx, uint8_t flag)
     return 0;
 }
 
-void USART_SendData(USART_Handle_t *pUSARTHandle, uint8_t *pTxBuffer, uint32_t Len)
-{
-
-	// uint16_t *pdata;
-
-   //Loop over until "Len" number of bytes are transferred
-	for(uint32_t i = 0 ; i < Len; i++)
-	{
-		//Implement the code to wait until TXE flag is set in the SR
-		while(! USART_GetFlagStatus(pUSARTHandle->USARTx, USART_SR_TXE));
-
-        //This is 8bit data transfer
-        pUSARTHandle->USARTx->DR = (*pTxBuffer  & (uint8_t)0xFF);
-
-        //Implement the code to increment the buffer address
-        pTxBuffer++;
-	}
-
-	//Implement the code to wait till TC flag is set in the SR
-	while( ! USART_GetFlagStatus(pUSARTHandle->USARTx, USART_SR_TC));
-}
-
 static void usart_irq_priority_set(uint16_t EXTI_IRQn, uint8_t IRQ_PR)
 {
     uint8_t IPRx = EXTI_IRQn / 4;
@@ -281,4 +259,35 @@ void usart_init(void)
     
     usart_irq_priority_set(USART2_IRQ_NO, 2);
     USART_IRQEnableInterrupt(USART2_IRQ_NO);
+}
+
+/************************************************
+ *                  ASSERT USART APIs
+ ************************************************/
+void usart_assert_init(void)
+{
+    usart_peripheral_control_enable();
+    usart_tx_interrupt_disable();
+    usart_configure(&usart2_h);
+}
+
+static void usart_putchar_polling(char c)
+{
+    //Implement the code to wait until TXE flag is set in the SR
+    while(! USART_GetFlagStatus(usart2_h.USARTx, USART_SR_TXE));
+    //This is 8bit data transfer
+    if (c == '\n')
+    {
+        while(!USART_GetFlagStatus(usart2_h.USARTx, USART_SR_TXE));
+        usart_putchar_polling('\r');
+    }
+    usart2_h.USARTx->DR = c;
+    return;
+}
+
+void usart_trace_assert(const char *string)
+{
+    int i = 0;
+    while(string[i] != '\0')
+        usart_putchar_polling(string[i++]);
 }

@@ -107,7 +107,7 @@ void led_blink(void)
 {
 	for (volatile int i = 0; i < 350000; ++i);
 	GPIOA->ODR ^= (0x1U << GPIO_ODR_OD5_Pos);
-	usart_send_data(&uart2_h, (uint8_t*)buf, strlen((char*)buf));
+	// usart_send_data(&uart2_h, (uint8_t*)buf, strlen((char*)buf));
 }
 
 // int main(void)
