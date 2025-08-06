@@ -13,6 +13,30 @@
 #define ANALOG_IO_CONFG(GPIOX, IO_PIN_NO)	{(GPIOX), {(IO_PIN_NO), IO_MODE_ANALOG, IO_SPEED_FAST, IO_OPTYPE_PP, IO_RES_NOPUPD}}
 // #define UNUSED_IO_CONFG(GPIOX, IO_PIN_NO) 	{(GPIOX), {(IO_PIN_NO), IO_MODE_OUTPUT, IO_SPEED_FAST, IO_OPTYPE_PP, IO_RES_PD}}
 #define UNUSED_IO_CONFG(GPIOX, IO_PIN_NO)	{NULL, {16}}
+
+#define IO_PORT_OFFSET		(4U)
+#define IO_PORT_MSK			(0x3U << IO_PORT_OFFSET)
+#define IO_PIN_MSK			(0xFU)
+
+static uint8_t io_port(io_e io)
+{
+	return (io & IO_PORT_MSK) >> IO_PORT_OFFSET;
+}
+
+static uint8_t io_pin_idx(io_e io)
+{
+	return (io & IO_PIN_MSK);
+}
+
+static uint8_t io_pin_bit(io_e io)
+{
+	return 1 << io_pin_idx(io);
+}
+
+uint8_t io_adc_pin_idx(io_e io)
+{
+	return io_pin_idx(io);
+}
 /********************************************
  * 				STATIC IO ARRAYS
  ********************************************/
@@ -91,6 +115,12 @@ static inline io_port_e IO_GetPort(GPIO_TypeDef *GPIOx)
 static bool compare_io_unused(const io_handle_t *io_h)
 {
 	return (io_h->GPIOx == NULL) && (io_h->IO_Confg.PIN_NO == 16);
+}
+
+const io_e *io_adc_pins(uint8_t *count)
+{
+	*count = ARRAY_SIZE(adc_pins_arr);
+	return adc_pins_arr;
 }
 
 void IO_Init()

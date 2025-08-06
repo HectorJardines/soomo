@@ -285,6 +285,9 @@ void IO_IRQEnableInterrupt(uint16_t EXTI_IRQn);
 void IO_IRQDisableIT(uint16_t EXTI_IRQn);
 void IO_SetInterruptPriority(uint16_t EXTI_IRQn, uint8_t IRQ_PR);
 
+const io_e *io_adc_pins(uint8_t *count);
+uint8_t io_adc_pin_idx(io_e io);
+
 /******************************************
 *           IO ISR Functions
 *******************************************/
