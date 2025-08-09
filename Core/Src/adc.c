@@ -65,6 +65,7 @@ void adc_init(void)
     // enable end of conversion interrupts
     adc_peripheral_enable();
     adc_enable_and_start_conversion();
+    initialized = true;
 }
 
 void adc_get_channel_values(adc_channel_values_t values)

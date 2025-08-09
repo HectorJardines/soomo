@@ -37,6 +37,8 @@
         "list": "c",
         "stack": "c",
         "utility": "c",
-        "ring_buffer.h": "c"
+        "ring_buffer.h": "c",
+        "assert_handler.h": "c",
+        "stdint.h": "c"
     }
 }

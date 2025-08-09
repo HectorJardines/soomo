@@ -57,6 +57,8 @@ Core/Src/trace.c \
 Core/Src/dma.c \
 Core/Src/interrupts.c \
 Core/Src/assert_handler.c \
+Core/Src/qre113.c \
+Core/Src/line_detect.c \
 Core/Src/stm32f4xx_it.c \
 Core/Src/stm32f4xx_hal_msp.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
